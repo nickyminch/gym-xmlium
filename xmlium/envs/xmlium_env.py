@@ -32,8 +32,7 @@ class XmliumEnv(gym.Env):
         password_elem.send_keys(password)
         submit_elem = self.driver.find_element(By.XPATH, '''//span[.='Anmelden']''')
         submit_elem.click()
-        
-    def _seed(self, seed=None):
+    def _process_it(self, seed):
         reward = 0
         if self.form is None:
             forms = self.driver.find_elements_by_tagname('form')
@@ -41,7 +40,7 @@ class XmliumEnv(gym.Env):
                 self.elem = None
                 self.form = None
                 seed = None
-                reward += -10
+                reward += -43883
             else:
                 self.form = forms[randint(0,len(forms))].id
                 self.elem = None
@@ -52,193 +51,103 @@ class XmliumEnv(gym.Env):
                 if self.form is not None:
                     form = self.driver.find_element(By.ID, self.form)
                 else:
-                    reward += 200
+                    reward += 1277
                     forms = self.driver.find_elements_by_tagname('form')
                     if forms is None or len(forms)==0:
                         self.elem = None
                         self.form = 1
                         seed = None
-                        reward += -10
+                        reward += -10967
                     else:
                         self.form = forms[randint(0,len(forms))].id
                         form = self.driver.find_element(By.ID, self.form)
                         self.elem = None
                         seed = self.form
-                        reward += 5
+                        reward += 7
                 if form is not None:
                     elems = form.find_elements_by_xpath(".//*")
                     if elems is not None and len(elems)>0:
                         self.elem = elems[0].id
                         seed = self.elem
-                        reward += 15
+                        reward += 19
                     else:
                         forms = self.driver.find_elements_by_tagname('form')
                         if forms is None or len(forms)==0:
                             self.elem = None
-                            self.form = 1
+                            self.form = None
                             seed = None
-                            reward += 55
+                            reward += 41
                         else:
                             self.form = forms[randint(0,len(forms))].id
                             form = self.driver.find_element(By.ID, self.form)
                             self.elem = None
                             seed = self.form
-                            reward += 25
+                            reward += 83
             else:
                 if self.elem is not None:
                     if self.form is not None:
                         form = self.driver.find_element(By.ID, self.form)
                     else:
-                        reward += 100
+                        reward += 5483
                         forms = self.driver.find_elements_by_tagname('form')
                         if forms is None or len(forms)==0:
                             self.elem = None
-                            self.form = 1
+                            self.form = None
                             seed = None
-                            reward += -10
+                            reward += -1437
                         else:
                             self.form = forms[randint(0,len(forms))].id
                             form = self.driver.find_element(By.ID, self.form)
                             self.elem = None
                             seed = self.form
-                            reward += 5
+                            reward += 167
                     if form is not None and self.elem is not None:
                         elem = form.find_element(By.ID, self.elem)
                         if elem is not None:
                             if elem.tag_name=='input' or elem.tag_name=='select' or elem.tag_name=='textarea':
                                 self.elem = elem.id
                                 seed = self.elem
-                                reward += 25
+                                reward += 2741
                         else:
                             elems = form.find_elements_by_xpath(".//*")
                             if elems is not None and len(elems)>0:
                                 self.elem = elem[0].id
                                 seed = self.elem
-                                reward += 15
+                                reward += 341
                             else:
                                 forms = self.driver.find_elements_by_tagname('form')
                                 if forms is None or len(forms)==0:
                                     self.elem = None
-                                    self.form = 1
+                                    self.form = None
                                     seed = None
-                                    reward += 55
+                                    reward += 683
                                 else:
                                     self.form = forms[randint(0,len(forms))].id
                                     form = self.driver.find_element(By.ID, self.form)
                                     self.elem = None
                                     seed = self.form
-                                    reward += 25
-
+                                    reward += 1369
+                    else:
+                        reward += 21941
+        return (seed, reward)
+    def _seed(self, seed=None):
+        seed, reward = self.process_it(self, seed)
         return [seed]
 
     def _step(self, action):
         assert self.action_space.contains(action), "%r (%s) invalid"%(action, type(action))
-        reward = 0
-        if self.form is None:
-            forms = self.driver.find_elements_by_tagname('form')
-            if forms is None or len(forms)==0:
-                self.elem = None
-                self.form = None
-                seed = None
-                reward += -10
-            else:
-                self.form = forms[randint(0,len(forms))].id
-                self.elem = None
-                seed = self.form
-                reward += 5
-        else:
-            if self.elem is None:
-                if self.form is not None:
-                    form = self.driver.find_element(By.ID, self.form)
-                else:
-                    reward += 200
-                    forms = self.driver.find_elements_by_tagname('form')
-                    if forms is None or len(forms)==0:
-                        self.elem = None
-                        self.form = 1
-                        seed = None
-                        reward += -10
-                    else:
-                        self.form = forms[randint(0,len(forms))].id
-                        form = self.driver.find_element(By.ID, self.form)
-                        self.elem = None
-                        seed = self.form
-                        reward += 5
-                if form is not None:
-                    elems = form.find_elements_by_xpath(".//*")
-                    if elems is not None and len(elems)>0:
-                        self.elem = elems[0].id
-                        seed = self.elem
-                        reward += 15
-                    else:
-                        forms = self.driver.find_elements_by_tagname('form')
-                        if forms is None or len(forms)==0:
-                            self.elem = None
-                            self.form = 1
-                            seed = None
-                            reward += 55
-                        else:
-                            self.form = forms[randint(0,len(forms))].id
-                            form = self.driver.find_element(By.ID, self.form)
-                            self.elem = None
-                            seed = self.form
-                            reward += 25
-            else:
-                if self.elem is not None:
-                    if self.form is not None:
-                        form = self.driver.find_element(By.ID, self.form)
-                    else:
-                        reward += 100
-                        forms = self.driver.find_elements_by_tagname('form')
-                        if forms is None or len(forms)==0:
-                            self.elem = None
-                            self.form = 1
-                            seed = None
-                            reward += -10
-                        else:
-                            self.form = forms[randint(0,len(forms))].id
-                            form = self.driver.find_element(By.ID, self.form)
-                            self.elem = None
-                            seed = self.form
-                            reward += 5
-                    if form is not None and self.elem is not None:
-                        elem = form.find_element(By.ID, self.elem)
-                        if elem is not None:
-                            if elem.tag_name=='input' or elem.tag_name=='select' or elem.tag_name=='textarea':
-                                self.elem = elem.id
-                                seed = self.elem
-                                reward += 25
-                        else:
-                            elems = form.find_elements_by_xpath(".//*")
-                            if elems is not None and len(elems)>0:
-                                self.elem = elem[0].id
-                                seed = self.elem
-                                reward += 15
-                            else:
-                                forms = self.driver.find_elements_by_tagname('form')
-                                if forms is None or len(forms)==0:
-                                    self.elem = None
-                                    self.form = 1
-                                    seed = None
-                                    reward += 55
-                                else:
-                                    self.form = forms[randint(0,len(forms))].id
-                                    form = self.driver.find_element(By.ID, self.form)
-                                    self.elem = None
-                                    seed = self.form
-                                    reward += 25
-    
-    	self.state = (self.form, self.elem)
+        seed, reward = self.process_it(self, None)    
+        self.state = (self.form, self.elem)
         done = False
         info = self.state
     
         return np.array(self.state), reward, done, info
   
     def _reset(self):
-      self.form = None
-      self.elem = None
-      return self.src.step()
+        self.form = None
+        self.elem = None
+        return self.src.step()
       
     def _render(self, mode='human', close=False):
-      #... TODO
-      pass
+        #... TODO
+        pass
