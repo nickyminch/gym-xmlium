@@ -8,7 +8,7 @@ import gym_pull
     
 print(universe.__file__); print(universe.register); print(universe.configuration)
 
-gym_pull.pull('github.com/ppaquette/gym-doom')
+#gym_pull.pull('github.com/ppaquette/gym-doom')
 #env = gym.make('flashgames.DuskDrive-v0')
 env = gym.make('xmlium-v0')
 env.configure(remotes='vnc://localhost:5900+15900')
