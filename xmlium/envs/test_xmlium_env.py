@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 import gym
-import universe
+#import universe
 import time
 import numpy as np
 import gym_pull
