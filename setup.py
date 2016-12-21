@@ -1,7 +1,8 @@
 #!/usr/bin/python
 from setuptools import setup
 
-setup(name='xmlium',
+setup(name='gym-xmlium',
       version='0.0.1',
-      install_requires=['gym', 'selenium']  
+      install_requires=['gym', 'selenium'],
+      packages=['xmlium', 'xmlium.envs'], 
 ) 

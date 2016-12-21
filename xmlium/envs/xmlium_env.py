@@ -3,6 +3,8 @@ import gym
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 from random import randint
 import numpy as np
 
@@ -18,20 +20,25 @@ class XmliumEnv(gym.Env):
         self.driver = None
         self.form = None
         self.elem = None
+        
         username='kawaman@mail.bg'
         password = 'niki1234'
         
         #self.driver = webdriver.Chrome('./chromedriverlinux')  # Optional argument, if not specified will search path.
-        self.driver = webdriver.Firefox('./geckodriverlinux')  # Optional argument, if not specified will search path.
+        self.driver = webdriver.Firefox(executable_path='./geckodriverlinux')  # Optional argument, if not specified will search path.
+        
+        self.wait = WebDriverWait(self.driver, 4)
+        
         self.driver.get('http://jens-stahl-dev.de/');
         time.sleep(1) # Let the user actually see something!
-        login = self.driver.find_element(By.XPATH, '''//span[.='Zur Anmeldung']''')
+        login =self.wait.until(EC.presence_of_element_located( (By.XPATH, '''//span[.='Zur Anmeldung']''') ))
+        #login = self.driver.find_element(By.XPATH, '''//span[.='Zur Anmeldung']''')
         login.click()
-        user_elem = self.driver.find_element(By.XPATH, '''//input[@id='login:login-email-text']''')
+        user_elem = self.wait.until(EC.presence_of_element_located( (By.XPATH, '''//input[@id='login:login-email-text']''') ))
         user_elem.send_keys(username)
-        password_elem = self.driver.find_element(By.XPATH, '''//input[@id='login:login-password-text']''')
+        password_elem = self.wait.until(EC.presence_of_element_located( (By.XPATH, '''//input[@id='login:login-password-text']''') ))
         password_elem.send_keys(password)
-        submit_elem = self.driver.find_element(By.XPATH, '''//span[.='Anmelden']''')
+        submit_elem = self.wait.until(EC.presence_of_element_located( (By.XPATH, '''//span[.='Anmelden']''') ))
         submit_elem.click()
     def _process_it(self, seed):
         reward = 0
