@@ -21,8 +21,9 @@ class XmliumEnv(gym.Env):
         username='kawaman@mail.bg'
         password = 'niki1234'
         
-        self.driver = webdriver.Chrome('./chromedriverlinux')  # Optional argument, if not specified will search path.
-        self.driver.get('http://localhost:8080/');
+        #self.driver = webdriver.Chrome('./chromedriverlinux')  # Optional argument, if not specified will search path.
+        self.driver = webdriver.Firefox('./geckodriverlinux')  # Optional argument, if not specified will search path.
+        self.driver.get('http://jens-stahl-dev.de/');
         time.sleep(1) # Let the user actually see something!
         login = self.driver.find_element(By.XPATH, '''//span[.='Zur Anmeldung']''')
         login.click()
