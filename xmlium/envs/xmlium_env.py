@@ -21,8 +21,8 @@ class XmliumEnv(gym.Env):
         self.form = None
         self.elem = None
         
-        username='kawaman@mail.bg'
-        password = 'niki1234'
+        username=''
+        password = ''
         
         #self.driver = webdriver.Chrome('./chromedriverlinux')  # Optional argument, if not specified will search path.
         self.driver = webdriver.Firefox(executable_path='./geckodriverlinux')  # Optional argument, if not specified will search path.
