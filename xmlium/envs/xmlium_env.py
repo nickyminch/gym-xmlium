@@ -1,160 +1,72 @@
-import time
+from time import sleep
 import gym
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.remote.webelement import WebElement
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from random import randint
+from universe.spaces import vnc_event
+import dogtail.utils
+from dogtail.tree import Application
 import numpy as np
+from universe.spaces import VNCActionSpace
+from universe.wrappers import BlockingReset
 
 
-class XmliumEnv(gym.Env):
+class XmliumEnv(BlockingReset):
     metadata = {'render.modes': ['human']}
     
     def __init__(self):
-        self.reset()
+        super(XmliumEnv, self).__init__()
+        self.action_space = VNCActionSpace()
+        self.safe_action_space = self.action_space
+        dogtail.config.config.logDebugToStdOut = True
+        dogtail.config.config.logDebugToFile = False
     
-    def _configure(self, display=None):
-        self.display = display
-        self.driver = None
-        self.form = None
-        self.elem = None
-        
-        username=''
-        password = ''
-        
-        #self.driver = webdriver.Chrome('./chromedriverlinux')  # Optional argument, if not specified will search path.
-        self.driver = webdriver.Firefox(executable_path='./geckodriverlinux')  # Optional argument, if not specified will search path.
-        
-        self.wait = WebDriverWait(self.driver, 4)
-        
-        self.driver.get('http://jens-stahl-dev.de/');
-        time.sleep(1) # Let the user actually see something!
-        login =self.wait.until(EC.presence_of_element_located( (By.XPATH, '''//span[.='Zur Anmeldung']''') ))
-        #login = self.driver.find_element(By.XPATH, '''//span[.='Zur Anmeldung']''')
-        login.click()
-        user_elem = self.wait.until(EC.presence_of_element_located( (By.XPATH, '''//input[@id='login:login-email-text']''') ))
-        user_elem.send_keys(username)
-        password_elem = self.wait.until(EC.presence_of_element_located( (By.XPATH, '''//input[@id='login:login-password-text']''') ))
-        password_elem.send_keys(password)
-        submit_elem = self.wait.until(EC.presence_of_element_located( (By.XPATH, '''//span[.='Anmelden']''') ))
-        submit_elem.click()
-    def _process_it(self, seed):
-        reward = 0
-        if self.form is None:
-            forms = self.driver.find_elements_by_tagname('form')
-            if forms is None or len(forms)==0:
-                self.elem = None
-                self.form = None
-                seed = None
-                reward += -43883
-            else:
-                self.form = forms[randint(0,len(forms))].id
-                self.elem = None
-                seed = self.form
-                reward += 5
-        else:
-            if self.elem is None:
-                if self.form is not None:
-                    form = self.driver.find_element(By.ID, self.form)
-                else:
-                    reward += 1277
-                    forms = self.driver.find_elements_by_tagname('form')
-                    if forms is None or len(forms)==0:
-                        self.elem = None
-                        self.form = 1
-                        seed = None
-                        reward += -10967
-                    else:
-                        self.form = forms[randint(0,len(forms))].id
-                        form = self.driver.find_element(By.ID, self.form)
-                        self.elem = None
-                        seed = self.form
-                        reward += 7
-                if form is not None:
-                    elems = form.find_elements_by_xpath(".//*")
-                    if elems is not None and len(elems)>0:
-                        self.elem = elems[0].id
-                        seed = self.elem
-                        reward += 19
-                    else:
-                        forms = self.driver.find_elements_by_tagname('form')
-                        if forms is None or len(forms)==0:
-                            self.elem = None
-                            self.form = None
-                            seed = None
-                            reward += 41
-                        else:
-                            self.form = forms[randint(0,len(forms))].id
-                            form = self.driver.find_element(By.ID, self.form)
-                            self.elem = None
-                            seed = self.form
-                            reward += 83
-            else:
-                if self.elem is not None:
-                    if self.form is not None:
-                        form = self.driver.find_element(By.ID, self.form)
-                    else:
-                        reward += 5483
-                        forms = self.driver.find_elements_by_tagname('form')
-                        if forms is None or len(forms)==0:
-                            self.elem = None
-                            self.form = None
-                            seed = None
-                            reward += -1437
-                        else:
-                            self.form = forms[randint(0,len(forms))].id
-                            form = self.driver.find_element(By.ID, self.form)
-                            self.elem = None
-                            seed = self.form
-                            reward += 167
-                    if form is not None and self.elem is not None:
-                        elem = form.find_element(By.ID, self.elem)
-                        if elem is not None:
-                            if elem.tag_name=='input' or elem.tag_name=='select' or elem.tag_name=='textarea':
-                                self.elem = elem.id
-                                seed = self.elem
-                                reward += 2741
-                        else:
-                            elems = form.find_elements_by_xpath(".//*")
-                            if elems is not None and len(elems)>0:
-                                self.elem = elem[0].id
-                                seed = self.elem
-                                reward += 341
-                            else:
-                                forms = self.driver.find_elements_by_tagname('form')
-                                if forms is None or len(forms)==0:
-                                    self.elem = None
-                                    self.form = None
-                                    seed = None
-                                    reward += 683
-                                else:
-                                    self.form = forms[randint(0,len(forms))].id
-                                    form = self.driver.find_element(By.ID, self.form)
-                                    self.elem = None
-                                    seed = self.form
-                                    reward += 1369
-                    else:
-                        reward += 21941
-        return (seed, reward)
-    def _seed(self, seed=None):
-        seed, reward = self.process_it(self, seed)
-        return [seed]
 
+    def _isEditable(self):
+        if self.elem.roleName=='entry' or self.elem.roleName=='text':
+            return True
+        else:
+            return False
+    def _isClickable(self):
+        if self.elem.roleName=='combo box'or self.elem.roleName=='link' or self.elem.roleName=='menu item':
+            return True
+        else:
+            return False
     def _step(self, action):
         assert self.action_space.contains(action), "%r (%s) invalid"%(action, type(action))
-        seed, reward = self.process_it(self, None)    
-        self.state = (self.form, self.elem)
-        done = False
-        info = self.state
+        if self.action_space.contains(action):
+            for a in action:
+                if isinstance(a, vnc_event.KeyEvent):
+                    if self.elem is None:
+                        return (), -100, False, ()
+                    elif self.isEditable():
+                        return (), 100, False, ()
+                    else:
+                        return (), -1000, False, ()
+                elif isinstance(a, vnc_event.PointerEvent):
+                    self.elem = None
+                    self.elem = self.app.getChildAtPoint(a.x, a.y)
+                    if self.elem is None:
+                        return (), -100, False, ()
+                    elif self.isClickable():
+                        return (), 100, False, ()
+                    else:
+                        return (), -1000, False, ()
     
-        return np.array(self.state), reward, done, info
+        return (), 100000, False, ()
   
     def _reset(self):
-        self.form = None
         self.elem = None
-        return self.src.step()
+
+        username='kawaman@mail.bg'
+        password = 'niki1234'
+        self.pid = dogtail.utils.run('firefox http://http://jens-stahl-dev.de/views/login.xhtml')
+        self.app = Application('Firefox')
+        tree = self.app.child(name='Weltportfolio', roleName='document frame')
+        tree.child(name='E-Mail*', roleName='entry').typeText(username)
+        tree.child(name='Passwort*', roleName='entry').typeText(password)
+        tree.child(name=' Anmelden', roleName='push button').doActionNamed('click')
+         
+        sleep(0.5)
+       
+        return self.step()
       
     def _render(self, mode='human', close=False):
         #... TODO
