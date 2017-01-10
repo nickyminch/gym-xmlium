@@ -51,7 +51,7 @@ class XmliumEnv(BlockingReset):
         if self.observation_space is None:
             forms = self.driver.find_elements_by_tag_name('form')
             self.observation_space = []
-            self.action_space = []
+            self.action_space = {}
             forms_new = []
             for form in forms:
                 form_id = form.get_attribute("id")
@@ -67,7 +67,7 @@ class XmliumEnv(BlockingReset):
                         forms_new.append(form_id)
             index = 0
             for form1 in forms_new:
-                self.action_space.append([])
+                elems_dict = {}
                 form = self.driver.find_element(By.ID, form1)
                 elems = form.find_elements_by_xpath(".//*")
                 elems_new = []
@@ -84,7 +84,7 @@ class XmliumEnv(BlockingReset):
                 str = string.printable
                 index2 = 0
                 for elem1 in elems_new:
-                    self.action_space[index].append([])
+                    actions = []
                     elem = self.driver.find_element(By.ID, elem1)
                     tag_name = elem.tag_name
                     if tag_name=="input":
@@ -92,36 +92,52 @@ class XmliumEnv(BlockingReset):
                         xo = XmliumOb(3, form1, elem1)
                         if elem_type!="text":
                             self.observation_space.append(xo)
-                            self.action_space[index][index2].append(XmliumAction("click", xo))
+                            actions.append(XmliumAction("click", xo))
                         else:
                             xo2 = XmliumOb(5, form1, elem1)
                             self.observation_space.append(xo2)
                             index3 = 0
                             
                             for char in str:
-                                self.action_space[index][index2].append(XmliumAction(char, xo2))
+                                actions.append(XmliumAction(char, xo2))
+                                if index3%3==0:
+                                    actions.append(XmliumAction("click", xo))
                                 index3 = index3+1
-                                if index3%10==0:
-                                    self.action_space[index][index2].append(XmliumAction("click", xo))
-                            self.action_space[index][index2].append(XmliumAction(13, xo2))
+                            actions.append(XmliumAction(13, xo2))
                     elif tag_name=="textarea":
                         xo2 = XmliumOb(5, form1, elem1)
                         self.observation_space.append(xo2)
                         for char in str:
-                            self.action_space[index][index2].append(XmliumAction(char, xo2))
-                        self.action_space[index][index2].append(XmliumAction(13, xo2))
+                            actions.append(XmliumAction(char, xo2))
+                        actions.append(XmliumAction(13, xo2))
                     else:
                         xo2 = XmliumOb(5, form1, elem1)
-                        self.observation_space.append(xo2)
-                        for char in range(0, 46):
-                            self.action_space[index][index2].append(XmliumAction(char, xo2))
                         xo = XmliumOb(3, form1, elem1)
                         self.observation_space.append(xo)
-                        self.action_space[index][index2].append(XmliumAction("click", xo))
+                        self.observation_space.append(xo2)
+                        index3 = 0
+                        for char in range(0, 46):
+                            actions.append(XmliumAction(char, xo2))
+                            if index3%3==0:
+                                actions.append(XmliumAction("click", xo))
+                            index3 = index3+1
                     index2 = index2+1
+                    if len(actions)>0:
+                        arr = [(elem1,actions)]
+                        dict = {}
+                        dict.update(arr)
+                        elems_dict.update(dict)
+                
+                arr = [(form1,elems_dict)]
+                dict = {}
+                dict.update(arr)
+                #print(dict.keys())
+                dict2 = dict.get(form1)
+                #print(dict2.keys())
+                self.action_space.update(dict)
 
-                    #self.action_space.append(XmliumAction(index, elems_new, xo))
                 index = index+1
+
         else:
             if type(action) is XmliumAction:
                 reward=1
@@ -145,7 +161,14 @@ class XmliumEnv(BlockingReset):
                 elif xmliumob.elemType == 5:
                     id = action.xmliumob.element
                     elem = self.driver.find_element(By.ID, id)
-                    elem.send_keys(action.action)
+                    try:
+                        elem.send_keys(action.action)
+                    except ElementNotVisibleException:
+                        print(elem.tag_name)
+                        time.sleep(0.4)
+                        return self.reset(), 0, True, None
+                    except StaleElementReferenceException:
+                        print(self.action_space);
             else:
                 print("%r (%s) invalid"%(action, type(action)))
                 raise TypeError
